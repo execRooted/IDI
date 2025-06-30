@@ -315,7 +315,7 @@ def interpret_dutch_bsn(bsn):
     total = sum((9 - i) * digits[i] for i in range(8)) - digits[8]
 
     if total % 11 == 0:
-        print(f"{GREEN}Valid BSN number. \n Info can not be decoded from this number, \n as this tipe of 5code is more private \n then the others.{RESET}")
+        print(f"{GREEN}Valid BSN number. \n Info can not be decoded from this number, \n as this tipe of code is more private \n then the others.{RESET}")
     else:
         print(f"{RED}Invalid BSN number (failed checksum).{RESET}")
 
