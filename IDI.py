@@ -124,83 +124,217 @@ def interpret_romanian_cnp(cnp):
     print(f"{CYAN}{'-' * 50}{RESET}")
 
 
-def interpret_bulgarian_egn(cnp):
-    s = cnp[0]
-    aa = int(cnp[1:3])
-    ll = int(cnp[3:5])
-    zz = int(cnp[5:7])
-    gender = "Male" if int(s) % 2 != 0 else "Female"
-    birth_year = 1900 + aa if int(s) < 3 else 1800 + aa
-    birth_date = date(birth_year, ll, zz).strftime("%d %B %Y")
+def interpret_bulgarian_egn(egn):
+    if len(egn) != 10 or not egn.isdigit():
+        print(f"{RED}Invalid EGN format (must be 10 digits).{RESET}")
+        return
 
-    typewriter(f"\n{CYAN}Details from the ID Number:{RESET}")
-    print(f"{CYAN}Input ID: {YELLOW}{cnp}")
-    print(f"{CYAN}Gender: {YELLOW}{gender}")
+    yy = int(egn[0:2])
+    mm = int(egn[2:4])
+    dd = int(egn[4:6])
+    region_code = int(egn[6:9])
+    gender = "Female" if region_code % 2 == 0 else "Male"
+    check_digit = int(egn[9])
+
+    # Determine century and adjust month
+    if 1 <= mm <= 12:
+        year = 1900 + yy
+        month = mm
+    elif 21 <= mm <= 32:
+        year = 1800 + yy
+        month = mm - 20
+    elif 41 <= mm <= 52:
+        year = 2000 + yy
+        month = mm - 40
+    else:
+        print(f"{RED}Invalid month in EGN.{RESET}")
+        return
+
+    try:
+        birth_date_obj = date(year, month, dd)
+        birth_date = birth_date_obj.strftime("%d %B %Y")
+    except ValueError:
+        print(f"{RED}Invalid birth date in EGN.{RESET}")
+        return
+
+    # Validate checksum
+    weights = [2, 4, 8, 5, 10, 9, 7, 3, 6]
+    checksum = sum(int(egn[i]) * weights[i] for i in range(9)) % 11
+    calculated_check_digit = checksum if checksum < 10 else 0
+    is_valid = calculated_check_digit == check_digit
+
+    # Age
+    today = date.today()
+    age = today.year - year - ((today.month, today.day) < (month, dd))
+    is_adult = age >= 18
+
+    typewriter(f"\n{CYAN}Details from the EGN:{RESET}")
+    print(f"{CYAN}Input EGN: {YELLOW}{egn}")
+    print(f"{CYAN}Validity: {GREEN if is_valid else RED}{'Valid' if is_valid else 'Invalid'}{RESET}")
     print(f"{CYAN}Birth Date: {YELLOW}{birth_date}")
-    print(f"{CYAN}Country: {YELLOW}Bulgaria")
+    print(f"{CYAN}Gender: {YELLOW}{gender}")
+    print(f"{CYAN}Age: {YELLOW}{age}")
+    print(f"{CYAN}Is Adult: {YELLOW}{'Yes' if is_adult else 'No'}")
+    print(f"{CYAN}Century: {YELLOW}{year // 100 * 100}s")
     print(f"{CYAN}Registration Message: {GREEN}Born in Bulgaria, registered as {gender} on {birth_date}.{RESET}")
     print(f"{CYAN}{'-' * 50}{RESET}")
 
-def interpret_italian_codice_fiscale(cnp):
-    year = int(cnp[6:8])
-    month = int(cnp[8:10])
-    day = int(cnp[10:12])
-    gender_digit = int(cnp[15])
+
+def interpret_italian_codice_fiscale(codice):
+    months = {'A':'January','B':'February','C':'March','D':'April',
+              'E':'May','H':'June','L':'July','M':'August',
+              'P':'September','R':'October','S':'November','T':'December'}
+    comuni = {'H501':'Rome','F205':'Milan','G273':'Naples','D612':'Florence','Z404':'Foreign'}
+
+    if len(codice) != 16:
+        print(f"{RED}Invalid Codice Fiscale length.{RESET}")
+        return
+
+    sname = codice[0:3]; fname = codice[3:6]
+    yc = codice[6:8]; mc = codice[8]; dc = codice[9:11]
+    cc = codice[11:15]; check = codice[15]
+
+    try:
+        year = int(yc)
+        current_yy = date.today().year % 100
+        birth_year = (1900 + year if year <= current_yy else 1900 + year)
+        month = months.get(mc, None)
+        day = int(dc)
+        gender = "Female" if day > 40 else "Male"
+        birth_day = day - 40 if day > 40 else day
+        if not month:
+            print(f"{RED}Invalid month code.{RESET}")
+            return
+
+        birth_date = f"{birth_day:02d} {month} {birth_year}"
+        comune = comuni.get(cc, "Unknown Comune")
+
+        typewriter(f"\n{CYAN}Details from the Codice Fiscale:{RESET}")
+        print(f"{CYAN}Input ID: {YELLOW}{codice}")
+        print(f"{CYAN}Surname Code: {YELLOW}{sname}")
+        print(f"{CYAN}Name Code: {YELLOW}{fname}")
+        print(f"{CYAN}Year of Birth: {YELLOW}{birth_year}")
+        print(f"{CYAN}Month of Birth: {YELLOW}{month}")
+        print(f"{CYAN}Day of Birth: {YELLOW}{birth_day}")
+        print(f"{CYAN}Gender: {YELLOW}{gender}")
+        print(f"{CYAN}Comune Code: {YELLOW}{cc}")
+        print(f"{CYAN}Comune Name: {YELLOW}{comune}")
+        print(f"{CYAN}Check Character: {YELLOW}{check}")
+        print(f"{CYAN}Full Birth Date: {YELLOW}{birth_date}")
+        print(f"{CYAN}Country: {YELLOW}Italy")
+        print(f"{CYAN}Registration Message: {GREEN}Born in {comune} on {birth_date}.{RESET}")
+        print(f"{CYAN}{'-' * 50}{RESET}")
+    except ValueError:
+        print(f"{RED}Invalid numerical values in the Codice Fiscale.{RESET}")
+
+
+def interpret_swedish_personnummer(pnr):
+    import re
+
+    # Normalize format (remove dash/plus and spaces)
+    pnr = pnr.strip().replace(" ", "").replace("-", "").replace("+", "")
+
+    if not re.match(r"^\d{10}$|^\d{12}$", pnr):
+        print(f"{RED}Invalid format. Use YYMMDD-XXXX or YYYYMMDD-XXXX.{RESET}")
+        return
+
+    # Extract components
+    if len(pnr) == 12:
+        year = int(pnr[0:4])
+        month = int(pnr[4:6])
+        day = int(pnr[6:8])
+        serial = pnr[8:11]
+        check_digit = int(pnr[11])
+    else:  # 10-digit format
+        yy = int(pnr[0:2])
+        month = int(pnr[2:4])
+        day = int(pnr[4:6])
+        serial = pnr[6:9]
+        check_digit = int(pnr[9])
+
+        # Determine century
+        current_year = date.today().year
+        current_century = current_year // 100 * 100
+        century = current_century if yy <= (current_year % 100) else current_century - 100
+        year = century + yy
+
+    # Validate birth date
+    try:
+        birth_date_obj = date(year, month, day)
+        birth_date = birth_date_obj.strftime("%d %B %Y")
+    except ValueError:
+        print(f"{RED}Invalid birth date in personal number.{RESET}")
+        return
+
+    # Determine gender
+    gender_digit = int(serial[-1])
     gender = "Male" if gender_digit % 2 == 1 else "Female"
-    birth_date = date(1900 + year, month, day).strftime("%d %B %Y")
 
-    typewriter(f"\n{CYAN}Details from the ID Number:{RESET}")
-    print(f"{CYAN}Input ID: {YELLOW}{cnp}")
+    # Calculate Luhn checksum
+    def luhn_check(num):
+        digits = [int(x) for x in num]
+        total = 0
+        for i in range(len(digits)):
+            val = digits[i]
+            if i % 2 == 0:
+                val *= 2
+                if val > 9:
+                    val -= 9
+            total += val
+        return total % 10 == 0
+
+    luhn_input = (pnr[-10:-1]) if len(pnr) == 12 else (pnr[0:9])
+    valid_luhn = luhn_check(luhn_input + str(check_digit))
+
+    # Age calculation
+    today = date.today()
+    age = today.year - year - ((today.month, today.day) < (month, day))
+    is_adult = age >= 18
+
+    typewriter(f"\n{CYAN}Details from the Swedish Personnummer(10 digit format):{RESET}")
+    print(f"{CYAN}Input ID: {YELLOW}{pnr}")
+    print(f"{CYAN}Formatted Date of Birth: {YELLOW}{birth_date}")
     print(f"{CYAN}Gender: {YELLOW}{gender}")
-    print(f"{CYAN}Birth Date: {YELLOW}{birth_date}")
-    print(f"{CYAN}Country: {YELLOW}Italy")
-    print(f"{CYAN}Registration Message: {GREEN}Born in Italy, registered as {gender} on {birth_date}.{RESET}")
-    print(f"{CYAN}{'-' * 50}{RESET}")
-
-def interpret_swedish_personnummer(cnp):
-    year = int(cnp[0:2])
-    month = int(cnp[2:4])
-    day = int(cnp[4:6])
-    century = "19" if int(cnp[6]) < 4 else "20"
-    birth_year = int(century + str(year))
-    gender_digit = int(cnp[9])
-    gender = "Male" if gender_digit % 2 == 1 else "Female"
-    birth_date = date(birth_year, month, day).strftime("%d %B %Y")
-
-    typewriter(f"\n{CYAN}Details from the ID Number:{RESET}")
-    print(f"{CYAN}Input ID: {YELLOW}{cnp}")
-    print(f"{CYAN}Gender: {YELLOW}{gender}")
-    print(f"{CYAN}Birth Date: {YELLOW}{birth_date}")
+    print(f"{CYAN}Age: {YELLOW}{age}")
+    print(f"{CYAN}Is Adult: {YELLOW}{'Yes' if is_adult else 'No'}")
+    print(f"{CYAN}Checksum Validity: {GREEN if valid_luhn else RED}{'Valid' if valid_luhn else 'Invalid'}{RESET}")
     print(f"{CYAN}Country: {YELLOW}Sweden")
     print(f"{CYAN}Registration Message: {GREEN}Born in Sweden, registered as {gender} on {birth_date}.{RESET}")
     print(f"{CYAN}{'-' * 50}{RESET}")
 
-def interpret_dutch_bsn(cnp):
-    if len(cnp) != 9 or not cnp.isdigit():
-        print(f"{RED}Invalid BSN format{RESET}")
-        return
-    gender = "Male" if int(cnp[0]) % 2 != 0 else "Female"
 
-    typewriter(f"\n{CYAN}Details from the ID Number:{RESET}")
-    print(f"{CYAN}Input ID: {YELLOW}{cnp}")
-    print(f"{CYAN}Gender: {YELLOW}{gender}")
-    print(f"{CYAN}Country: {YELLOW}Netherlands")
-    print(f"{CYAN}Registration Message: {GREEN}Registered in the Netherlands as {gender}.{RESET}")
-    print(f"{CYAN}{'-' * 50}{RESET}")
+def interpret_dutch_bsn(bsn):
+    if len(bsn) != 9 or not bsn.isdigit():
+        print(f"{RED}Invalid BSN format (must be 9 digits).{RESET}")
+        return
+
+    digits = [int(d) for d in bsn]
+
+    # Apply 11-proof checksum:
+    # Sum = 9*digit1 + 8*digit2 + ... + 2*digit8 + (-1)*digit9
+    total = sum((9 - i) * digits[i] for i in range(8)) - digits[8]
+
+    if total % 11 == 0:
+        print(f"{GREEN}Valid BSN number. \n Info can not be decoded from this number, \n as this tipe of 5code is more private \n then the others.{RESET}")
+    else:
+        print(f"{RED}Invalid BSN number (failed checksum).{RESET}")
+
+
+
 
 def main():
     while True:
         clear_screen()
         logo()
         typewriter(f"{CYAN}Select country for the ID number:{RESET}")
-        print(f"{YELLOW}1. Romania\n2. Bulgaria\n3. Italy\n4. Sweden\n5. Netherlands{RESET}")
+        print(f"{YELLOW}1. Romania\n2. Bulgaria\n3. Italy\n4. Sweden(10-digit format)\n5. Netherlands{RESET}")
         country_choice = input(f"{CYAN}Enter country number: {RESET}").strip()
 
         country_map = {
             "1": "Romania",
             "2": "Bulgaria",
             "3": "Italy",
-            "4": "Sweden",
+            "4": "Sweden(10-digit format)",
             "5": "Netherlands"
         }
 
