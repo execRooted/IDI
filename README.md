@@ -63,11 +63,17 @@ Is Adult: Yes
 **Input:** `0249156007`
 
 ```
-Input ID: 0249156007
-Gender: Female
+Details from the EGN:
+Input EGN: 0249156007
+Validity: Valid
 Birth Date: 15 September 1902
-Country: Bulgaria
+Gender: Female
+Age: 121
+Is Adult: Yes
+Century: 1900s
 Registration Message: Born in Bulgaria, registered as Female on 15 September 1902.
+--------------------------------------------------
+
 ```
 
 ---
@@ -77,11 +83,22 @@ Registration Message: Born in Bulgaria, registered as Female on 15 September 190
 **Input:** `RSSMRA85M01H501U`
 
 ```
+Details from the Codice Fiscale:
 Input ID: RSSMRA85M01H501U
+Surname Code: RSS
+Name Code: MRA
+Year of Birth: 1985
+Month of Birth: August
+Day of Birth: 1
 Gender: Male
-Birth Date: 01 December 1985
+Comune Code: H501
+Comune Name: Rome
+Check Character: U
+Full Birth Date: 01 August 1985
 Country: Italy
-Registration Message: Born in Italy, registered as Male on 01 December 1985.
+Registration Message: Born in Rome on 01 August 1985.
+--------------------------------------------------
+
 ```
 
 ---
@@ -91,11 +108,17 @@ Registration Message: Born in Italy, registered as Male on 01 December 1985.
 **Input:** `990203+1234`
 
 ```
-Input ID: 990203+1234
+Details from the Swedish Personnummer(10 digit format):
+Input ID: 9902031234
+Formatted Date of Birth: 03 February 1999
 Gender: Male
-Birth Date: 03 February 1999
+Age: 26
+Is Adult: Yes
+Checksum Validity: Valid
 Country: Sweden
 Registration Message: Born in Sweden, registered as Male on 03 February 1999.
+--------------------------------------------------
+
 ```
 
 ---
@@ -105,10 +128,11 @@ Registration Message: Born in Sweden, registered as Male on 03 February 1999.
 **Input:** `123456782`
 
 ```
-Input ID: 123456782
-Gender: Male
-Country: Netherlands
-Registration Message: Registered in the Netherlands as Male.
+Valid BSN number. 
+ Info can not be decoded from this number, 
+ as this tipe of code is more private 
+ then the others.
+
 ```
 
 ---
